@@ -1,0 +1,22 @@
+name: Changelog Update
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Update changelog
+        run: |
+          version=$(cat version)
+          echo -e "## $version\n- Changes from PR ${{ github.event.pull_request.title }}\n" | cat - changelog.md > temp && mv temp changelog.md
+          git config --global user.email "ci@example.com"
+          git config --global user.name "GitHub Actions"
+          git add changelog.md
+          git commit -m "Update changelog for $version"
+          git push

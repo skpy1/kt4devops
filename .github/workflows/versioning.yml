@@ -1,0 +1,36 @@
+name: Versioning
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Read current version
+        id: get_version
+        run: |
+          version=$(cat version)
+          echo "Current version: $version"
+          IFS='.' read -r major minor patch <<< "$version"
+          if [[ "${{ github.head_ref }}" == *hotfix* ]]; then
+            patch=$((patch + 1))
+          else
+            minor=$((minor + 1))
+            patch=0
+          fi
+          new_version="$major.$minor.$patch"
+          echo "new_version=$new_version" >> $GITHUB_OUTPUT
+          echo "$new_version" > version
+
+      - name: Commit updated version
+        run: |
+          git config --global user.email "ci@example.com"
+          git config --global user.name "GitHub Actions"
+          git add version
+          git commit -m "[${{ steps.get_version.outputs.new_version }}] <- [$(cat version)] auto update"
+          git push
